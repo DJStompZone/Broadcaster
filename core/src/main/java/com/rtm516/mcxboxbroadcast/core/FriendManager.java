@@ -10,6 +10,7 @@ import com.rtm516.mcxboxbroadcast.core.models.friend.FriendStatusResponse;
 import com.rtm516.mcxboxbroadcast.core.models.session.CreateHandleRequest;
 import com.rtm516.mcxboxbroadcast.core.models.session.FollowerResponse;
 import com.rtm516.mcxboxbroadcast.core.models.session.SessionRef;
+import com.rtm516.mcxboxbroadcast.core.MessageListener;
 
 import java.io.IOException;
 import java.net.URI;
@@ -35,6 +36,7 @@ public class FriendManager {
     private List<FollowerResponse.Person> lastFriendCache;
     private Future<?> internalScheduledFuture;
     private boolean initialInvite;
+    private final MessageListener messageListener;
 
     public FriendManager(HttpClient httpClient, Logger logger, SessionManagerCore sessionManager) {
         this.httpClient = httpClient;
@@ -45,6 +47,14 @@ public class FriendManager {
         this.toRemove = new HashMap<>();
 
         this.lastFriendCache = new ArrayList<>();
+        this.messageListener = new MessageListener(
+            this, 
+            sessionManager,
+            httpClient,
+            logger,
+            10 // Polling interval
+    );
+    this.messageListener.start();
     }
 
     /**
