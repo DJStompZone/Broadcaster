@@ -42,6 +42,7 @@ public class Constants {
     public static final URI SOCIAL_SUMMARY = URI.create("https://social.xboxlive.com/users/me/summary");
     public static final String FOLLOWER = "https://social.xboxlive.com/users/me/people/follower/xuid(%s)";
     public static final String PROFILE_SETTINGS = "https://profile.xboxlive.com/users/xuid(%s)/profile/settings?settings=Gamertag";
+    public static final URI MESSAGES_ENDPOINT = URI.create("https://msg.xboxlive.com/users/me/messages"); // ?
 
     /**
      * Gathered from scraped web requests
