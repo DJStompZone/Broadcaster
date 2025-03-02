@@ -36,8 +36,14 @@ public class MessageListener {
 
     private void checkMessages() {
         try {
+            String xuid = sessionManager.getXuid();
+            if (xuid == null || xuid.isEmpty()) {
+                logger.error("XUID is not available. Cannot fetch messages.");
+                return;
+            }
+
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(Constants.MESSAGES_ENDPOINT)
+                .uri(URI.create(String.format(Constants.MESSAGES_INBOX, xuid)))
                 .header("Authorization", sessionManager.getTokenHeader())
                 .header("x-xbl-contract-version", "2")
                 .GET()
@@ -76,6 +82,7 @@ public class MessageListener {
     }
 
     private void processNewMessages(List<XboxMessage> messages) {
+        // Filter messages newer than the last processed timestamp
         List<XboxMessage> newMessages = messages.stream()
             .filter(message -> message.timestamp.isAfter(lastProcessedTimestamp))
             .collect(Collectors.toList());
@@ -85,6 +92,7 @@ public class MessageListener {
             return;
         }
 
+        // Group messages by sender and keep only the most recent one per sender
         Map<String, XboxMessage> latestMessagesBySender = new HashMap<>();
         for (XboxMessage message : newMessages) {
             latestMessagesBySender.merge(
@@ -94,11 +102,13 @@ public class MessageListener {
             );
         }
 
+        // Process the most recent message from each sender
         for (XboxMessage message : latestMessagesBySender.values()) {
             logger.debug("Processing message from " + message.senderXuid + ": " + message.content);
             friendManager.processMessage(message.content, message.senderXuid);
         }
 
+        // Update the last processed timestamp
         lastProcessedTimestamp = newMessages.stream()
             .map(message -> message.timestamp)
             .max(Instant::compareTo)
